@@ -1,0 +1,198 @@
+/* SVG Stilleri */
+.st0 {
+    fill: #FECE07;
+}
+
+.st1 {
+    fill: none;
+}
+
+.st2 {
+    clip-path: url(#SVGID_2_);
+    fill: #1D1D1B;
+}
+
+.st3 {
+    fill: #010101;
+}
+
+.st4 {
+    fill: none;
+    stroke: #000000;
+    stroke-width: 0.5;
+    stroke-miterlimit: 10;
+}
+
+/* Genel sayfa stilleri */
+body {
+    margin: 0;
+    padding: 20px;
+    background-color: #FECE07;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+}
+
+/* SVG container */
+svg {
+    max-width: 100%;
+    max-height: 90vh;
+    height: auto;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    border-radius: 8px;
+}
+
+/* Icon stilleri - hover efekti YOK */
+image {
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+
+/* Metin stilleri - daha yumuşak geçişler */
+text {
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+/* Sadece sayılar için çok daha subtle hover efekti */
+text[font-size="40"] {
+    transition: all 0.2s ease;
+}
+
+text[font-size="40"]:hover {
+    fill: #FF6B35 !important;
+    transform: scale(1.03); /* 1.1'den 1.03'e düşürüldü */
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); /* Gölge azaltıldı */
+}
+
+/* Grup hover efektleri - daha az hareket */
+g:hover {
+    cursor: pointer;
+}
+
+g:hover text[font-size="40"] {
+    transform: scale(1.02); /* 1.08'den 1.02'ye düşürüldü */
+    transition: all 0.2s ease;
+}
+
+/* Çizgiler için hover efekti - daha subtle */
+.st2:hover {
+    fill: #34495E;
+    stroke: #2C3E50;
+    stroke-width: 0.8; /* 1'den 0.8'e düşürüldü */
+    transition: all 0.2s ease;
+}
+
+/* Pulse animasyonu kaldırıldı - çok fazla hareket yaratıyordu */
+/* @keyframes pulse {
+    0%, 100% { 
+        transform: scale(1); 
+    }
+    50% { 
+        transform: scale(1.05); 
+    }
+} */
+
+/* Pulse animasyonu yerine daha subtle bir parıltı efekti */
+@keyframes subtle-glow {
+    0%, 100% { 
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    }
+    50% { 
+        filter: drop-shadow(0 3px 6px rgba(255,107,53,0.4));
+    }
+}
+
+/* Hover durumunda pulse yerine subtle glow */
+text[font-size="40"]:hover {
+    animation: subtle-glow 2s ease-in-out infinite;
+}
+
+/* Animasyon gecikmeleri azaltıldı */
+text:nth-child(1) { transition-delay: 0s; }
+text:nth-child(2) { transition-delay: 0.02s; } /* 0.05s'den azaltıldı */
+text:nth-child(3) { transition-delay: 0.04s; } /* 0.1s'den azaltıldı */
+text:nth-child(4) { transition-delay: 0.06s; } /* 0.15s'den azaltıldı */
+
+/* Responsive design */
+@media (max-width: 650px) {
+    body {
+        padding: 10px;
+    }
+    
+    svg {
+        transform: scale(0.9);
+        transform-origin: center;
+    }
+    
+    /* Mobilde daha da az hover efekti */
+    text[font-size="40"]:hover {
+        transform: scale(1.01); /* 1.02'den daha da azaltıldı */
+        animation: none; /* Mobilde animasyon kapat */
+    }
+}
+
+@media (max-width: 520px) {
+    svg {
+        transform: scale(0.7);
+    }
+    
+    /* Küçük ekranlarda minimal hover */
+    text[font-size="40"]:hover {
+        animation: none;
+        transform: scale(1.01);
+        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+    }
+}
+
+/* Accessibility - klavye navigasyonu için */
+svg:focus-within {
+    outline: 2px solid #3498DB;
+    outline-offset: 4px;
+}
+
+/* Print stilleri - yazdırma için animasyonları kapat */
+@media print {
+    animateTransform {
+        animation: none;
+    }
+    
+    image,
+    text:hover,
+    g:hover text {
+        transform: none !important;
+        filter: none !important;
+        animation: none !important;
+    }
+}
+
+/* Performance optimizasyonu */
+* {
+    will-change: auto;
+}
+
+/* SVG animasyonu için optimizasyon */
+animateTransform {
+    will-change: transform;
+}
+
+/* Hover sırasında will-change kullan */
+text[font-size="40"]:hover {
+    will-change: transform, filter;
+}
+
+/* Hover bittiğinde will-change'i kaldır */
+text[font-size="40"] {
+    will-change: auto;
+}
+
+/* Alternatif: Çok daha minimal hover efekti istiyorsanız */
+/*
+text[font-size="40"]:hover {
+    fill: #FF6B35 !important;
+    transform: scale(1.01);
+    filter: brightness(1.1);
+    animation: none;
+}
+*/
