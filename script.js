@@ -266,3 +266,39 @@ window.updateAllCategories = updateAllCategories;
 
 // Veri yapısını dışa aktar
 window.heritageData = data;
+// Sayma animasyonu fonksiyonu
+function animateNumbers() {
+    // Tüm sayıları animate et
+    Object.keys(data).forEach(key => {
+        if (key !== 'circle' && data[key].count) {
+            const element = document.getElementById(`${key}-count`);
+            if (element) {
+                // Başlangıçta 0 yap
+                element.textContent = '0';
+                // GSAP ile animate et
+                gsap.to(element, {
+                    textContent: data[key].count,
+                    duration: 5,
+                    delay: Math.random() * 0.5, // Random gecikme
+                    snap: { textContent: 1 },
+                    ease: "power2.out"
+                });
+            }
+        }
+    });
+}
+
+// DOMContentLoaded event listener'ını güncelle
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Sayfa yüklendi, veriler güncelleniyor...');
+    reloadData();
+    
+    // 500ms gecikme ile animasyonu başlat
+    setTimeout(() => {
+        animateNumbers();
+    }, 1000);
+    
+    loadDataFromJSON().catch(() => {
+        console.log('data.json bulunamadı, varsayılan veriler kullanılıyor');
+    });
+});

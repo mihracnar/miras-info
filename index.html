@@ -119,22 +119,24 @@
             <path id="bigCircle" d="M 305,275 A 130,130 0 1,1 304,275" fill="none"/>
         </defs>
         
-      <g>
-          <text font-family="Arial, sans-serif" font-size="16.5" fill="black" font-weight="500">
-              <textPath href="#bigCircle" startOffset="0%" id="circle-description">
-                  28 ilçede, 42 rotada ve 1348 ayrı noktalarda İstanbul'un kültür varlıklarında rutin koruma çalışmaları yapıyoruz.
-              </textPath>
-              <animateTransform
-                  attributeName="transform"
-                  type="rotate"
-                  values="0 305 413;-360 308 413"
-                  dur="25s"
-                  repeatCount="indefinite"/>
-          </text>
-      </g>
+        <g>
+            <text font-family="Arial, sans-serif" font-size="16.5" fill="black" font-weight="500">
+                <textPath href="#bigCircle" startOffset="0%" id="circle-description">
+                    28 ilçede, 42 rotada ve 1348 ayrı noktalarda İstanbul'un kültür varlıklarında rutin koruma çalışmaları yapıyoruz.
+                </textPath>
+                <!--  *** DÜZELTİLMİŞ ANİMASYON KODU *** -->
+                <animateTransform
+                    attributeName="transform"
+                    type="rotate"
+                    values="0 305 405;-360 305 405"
+                    dur="25s"
+                    repeatCount="indefinite"/>
+            </text>
+        </g>
 
     </svg>
 
     <script src="script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 </body>
 </html>
