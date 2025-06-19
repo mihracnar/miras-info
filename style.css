@@ -1,6 +1,6 @@
 /* SVG Stilleri */
 .st0 {
-    fill: #FECE07;
+    fill: #fece07;
 }
 
 .st1 {
@@ -197,3 +197,12 @@ text[font-size="40"]:hover {
     animation: none;
 }
 */
+
+#admin-trigger {
+    display: none !important;
+}
+
+/* Sadece ?admin=true parametresi varsa göster */
+body.admin-mode #admin-trigger {
+    display: block !important;
+}

@@ -1,63 +1,139 @@
-// Veri objesi
-const data = {
-    endustri: {
-        count: 7,
-        texts: ["Endüstri", "Miras", "Yapısı"]
-    },
-    anit: {
-        count: 63,
-        texts: ["Anıt", "Eser"]
-    },
-    turbe: {
-        count: 19,
-        texts: ["Tarihi", "Türbe"]
-    },
-    muze: {
-        count: 36,
-        texts: ["Müze ve", "Sergi Mekanı"]
-    },
-    kamusal: {
-        count: 40,
-        texts: ["Kamusal", "Sanat Eseri"]
-    },
-    arkeopark: {
-        count: 4,
-        texts: ["Arkeopark"]
-    },
-    hazire: {
-        count: 610,
-        texts: ["Tarihi", "Hazire ve", "Mezar"]
-    },
-    sarnic: {
-        count: 6,
-        texts: ["Sarnıç ve", "Maksem"]
-    },
-    cesme: {
-        count: 215,
-        texts: ["Tarihi", "Çeşme"]
-    },
-    circle: {
-        ilce: 28,
-        rota: 42,
-        nokta: 1348,
-        description: "ayrı noktalarda İstanbul'un kültür varlıklarında rutin koruma çalışmaları yapıyoruz."
-    }
-};
+// Supabase Configuration
+const SUPABASE_URL = 'https://nitcvhzbnpvgbzaiesqx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pdGN2aHpibnB2Z2J6YWllc3F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAzMjg3NzIsImV4cCI6MjA2NTkwNDc3Mn0.3W2DWBuIxHWno1MSsJEwEpK8uAnbKuHIdIJv-K7n-qg';
 
-// Verileri güncelleme fonksiyonu
-function updateData(newData) {
-    // Ana kategoriler
-    Object.keys(newData).forEach(key => {
+// Global veri objesi - SADECE Supabase'den gelecek
+let data = null;
+
+// Animasyon durumu takibi
+let isAnimating = false;
+let animationInterval = null;
+let realtimeInterval = null;
+
+// Supabase'den veri yükleme fonksiyonu - TEK KAYNAK
+async function loadFromSupabase(triggerAnimation = true) {
+    try {
+        console.log('Supabase\'den veri yükleniyor...');
+        
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/heritage_data?id=eq.1`, {
+            headers: {
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const dataArray = await response.json();
+        if (dataArray.length === 0) {
+            throw new Error('Supabase\'de veri bulunamadı');
+        }
+        
+        const heritageData = dataArray[0];
+        
+        // Global data objesini Supabase verisiyle güncelle
+        data = {
+            endustri: {
+                count: heritageData.endustri,
+                texts: ["Endüstri", "Miras", "Yapısı"]
+            },
+            anit: {
+                count: heritageData.anit,
+                texts: ["Anıt", "Eser"]
+            },
+            turbe: {
+                count: heritageData.turbe,
+                texts: ["Tarihi", "Türbe"]
+            },
+            muze: {
+                count: heritageData.muze,
+                texts: ["Müze ve", "Sergi Mekanı"]
+            },
+            kamusal: {
+                count: heritageData.kamusal,
+                texts: ["Kamusal", "Sanat Eseri"]
+            },
+            arkeopark: {
+                count: heritageData.arkeopark,
+                texts: ["Arkeopark"]
+            },
+            hazire: {
+                count: heritageData.hazire,
+                texts: ["Tarihi", "Hazire ve", "Mezar"]
+            },
+            sarnic: {
+                count: heritageData.sarnic,
+                texts: ["Sarnıç ve", "Maksem"]
+            },
+            cesme: {
+                count: heritageData.cesme,
+                texts: ["Tarihi", "Çeşme"]
+            },
+            circle: {
+                ilce: heritageData.ilce,
+                rota: heritageData.rota,
+                nokta: heritageData.nokta,
+                description: "ayrı noktalarda İstanbul'un kültür varlıklarında rutin koruma çalışmaları yapıyoruz."
+            }
+        };
+        
+        // DOM'u güncelle
+        updateDOM();
+        
+        // Animasyonu tetikle
+        if (triggerAnimation && !isAnimating) {
+            setTimeout(() => {
+                animateNumbers('data-update');
+            }, 300);
+        }
+        
+        console.log('✅ Veriler Supabase\'den başarıyla yüklendi:', heritageData);
+        return data;
+        
+    } catch (error) {
+        console.error('❌ Supabase load error:', error);
+        
+        // Fallback default data - sadece hata durumunda
+        if (!data) {
+            data = {
+                endustri: { count: 7, texts: ["Endüstri", "Miras", "Yapısı"] },
+                anit: { count: 63, texts: ["Anıt", "Eser"] },
+                turbe: { count: 19, texts: ["Tarihi", "Türbe"] },
+                muze: { count: 36, texts: ["Müze ve", "Sergi Mekanı"] },
+                kamusal: { count: 40, texts: ["Kamusal", "Sanat Eseri"] },
+                arkeopark: { count: 4, texts: ["Arkeopark"] },
+                hazire: { count: 610, texts: ["Tarihi", "Hazire ve", "Mezar"] },
+                sarnic: { count: 6, texts: ["Sarnıç ve", "Maksem"] },
+                cesme: { count: 215, texts: ["Tarihi", "Çeşme"] },
+                circle: { 
+                    ilce: 28, rota: 42, nokta: 1348,
+                    description: "ayrı noktalarda İstanbul'un kültür varlıklarında rutin koruma çalışmaları yapıyoruz."
+                }
+            };
+            updateDOM();
+            console.log('⚠️ Fallback veriler kullanılıyor');
+        }
+        return false;
+    }
+}
+
+// DOM güncelleme fonksiyonu
+function updateDOM() {
+    if (!data) return;
+    
+    // Sayıları güncelle
+    Object.keys(data).forEach(key => {
         if (key === 'circle') {
-            // Dairesel veriler - tek bir metin olarak güncelle
+            // Dairesel metin güncelle
             const descElement = document.getElementById('circle-description');
-            if (descElement && newData.circle) {
-                const { ilce, rota, nokta, description } = newData.circle;
+            if (descElement && data.circle) {
+                const { ilce, rota, nokta, description } = data.circle;
                 descElement.textContent = `${ilce} ilçede, ${rota} rotada ve ${nokta} ${description}`;
             }
         } else {
-            // Diğer kategoriler
-            const category = newData[key];
+            const category = data[key];
             if (category) {
                 // Sayıyı güncelle
                 const countElement = document.getElementById(`${key}-count`);
@@ -77,228 +153,201 @@ function updateData(newData) {
     });
 }
 
-// Tüm verileri yeniden yükleme fonksiyonu
-function reloadData() {
-    updateData(data);
-}
-
-// API'den veri çekme fonksiyonu
-async function fetchDataFromAPI(apiUrl = '/api/heritage-data') {
-    try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const apiData = await response.json();
-        updateData(apiData);
-        console.log('Veri başarıyla API\'den güncellendi');
-        return apiData;
-    } catch (error) {
-        console.error('API\'den veri çekme hatası:', error);
-        // Hata durumunda varsayılan verileri yükle
-        reloadData();
-        return null;
-    }
-}
-
-// JSON dosyasından veri çekme fonksiyonu
-async function loadDataFromJSON(jsonPath = 'data.json') {
-    try {
-        const response = await fetch(jsonPath);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const jsonData = await response.json();
-        updateData(jsonData);
-        console.log('Veri başarıyla JSON dosyasından yüklendi');
-        return jsonData;
-    } catch (error) {
-        console.error('JSON dosyasından veri yükleme hatası:', error);
-        // Hata durumunda varsayılan verileri yükle
-        reloadData();
-        return null;
-    }
-}
-
-// Manuel veri güncelleme fonksiyonu (test için)
-function updateManualData() {
-    const newData = {
-        endustri: { count: 10, texts: ["Yeni", "Endüstri", "Miras"] },
-        anit: { count: 75, texts: ["Anıt", "Yapılar"] },
-        turbe: { count: 25, texts: ["Tarihi", "Türbe"] },
-        muze: { count: 45, texts: ["Müze ve", "Sergi Alanı"] },
-        kamusal: { count: 50, texts: ["Kamusal", "Sanat Eseri"] },
-        arkeopark: { count: 8, texts: ["Arkeopark"] },
-        hazire: { count: 700, texts: ["Tarihi", "Hazire ve", "Mezar"] },
-        sarnic: { count: 12, texts: ["Sarnıç ve", "Maksem"] },
-        cesme: { count: 250, texts: ["Tarihi", "Çeşme"] },
-        circle: { 
-            ilce: 35, 
-            rota: 50, 
-            nokta: 1500, 
-            description: "ayrı noktalarda İstanbul'un kültür varlıklarında rutin koruma çalışmaları yapıyoruz." 
-        }
-    };
-    updateData(newData);
-    console.log('Test verileri yüklendi');
-}
-
-// Belirli bir kategorinin verisini güncelleme
-function updateCategory(categoryName, newCategoryData) {
-    const updateObject = {};
-    updateObject[categoryName] = newCategoryData;
-    updateData(updateObject);
-    console.log(`${categoryName} kategorisi güncellendi`);
-}
-
-// Belirli bir kategorinin sayısını güncelleme
-function updateCount(categoryName, newCount) {
-    const countElement = document.getElementById(`${categoryName}-count`);
-    if (countElement) {
-        countElement.textContent = newCount;
-        console.log(`${categoryName} sayısı ${newCount} olarak güncellendi`);
-    } else {
-        console.error(`${categoryName} kategorisi bulunamadı`);
-    }
-}
-
-// Dairesel metin animasyonunu kontrol etme
-function toggleRotation() {
-    const rotatingText = document.querySelector('animateTransform');
-    if (rotatingText) {
-        if (rotatingText.getAttribute('dur') === '0s') {
-            rotatingText.setAttribute('dur', '25s');
-            console.log('Dairesel metin animasyonu başlatıldı');
-        } else {
-            rotatingText.setAttribute('dur', '0s');
-            console.log('Dairesel metin animasyonu durduruldu');
-        }
-    }
-}
-
-// Animasyon hızını değiştirme
-function changeRotationSpeed(seconds = 25) {
-    const rotatingText = document.querySelector('animateTransform');
-    if (rotatingText) {
-        rotatingText.setAttribute('dur', `${seconds}s`);
-        console.log(`Animasyon hızı ${seconds} saniye olarak ayarlandı`);
-    }
-}
-
-// Otomatik veri güncelleme (belirli aralıklarla)
-function startAutoUpdate(intervalMinutes = 5) {
-    const intervalMs = intervalMinutes * 60 * 1000;
-    return setInterval(() => {
-        console.log('Otomatik veri güncelleme başlatılıyor...');
-        fetchDataFromAPI();
-    }, intervalMs);
-}
-
-// Otomatik güncellemeyi durdurma
-function stopAutoUpdate(intervalId) {
-    if (intervalId) {
-        clearInterval(intervalId);
-        console.log('Otomatik güncelleme durduruldu');
-    }
-}
-
-// Hover efektlerini geçici olarak devre dışı bırakma
-function disableHoverEffects() {
-    const style = document.createElement('style');
-    style.innerHTML = `
-        image:hover, text:hover, g:hover image, g:hover text {
-            transform: none !important;
-            filter: none !important;
-            animation: none !important;
-        }
-    `;
-    style.id = 'disable-hover';
-    document.head.appendChild(style);
-    console.log('Hover efektleri devre dışı bırakıldı');
-}
-
-// Hover efektlerini yeniden etkinleştirme
-function enableHoverEffects() {
-    const style = document.getElementById('disable-hover');
-    if (style) {
-        style.remove();
-        console.log('Hover efektleri yeniden etkinleştirildi');
-    }
-}
-
-// Tüm kategorilerin verilerini toplu güncelleme
-function updateAllCategories(newCounts) {
-    Object.keys(newCounts).forEach(category => {
-        if (data[category]) {
-            data[category].count = newCounts[category];
-            updateCount(category, newCounts[category]);
-        }
-    });
-    console.log('Tüm kategoriler güncellendi:', newCounts);
-}
-
-// Sayfa yüklendiğinde verileri güncelle
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Sayfa yüklendi, veriler güncelleniyor...');
-    reloadData();
+// Admin panelinden güncelleme geldiğinde çağrılacak
+function updateData(newData) {
+    console.log('Admin panelinden güncelleme alındı:', newData);
     
-    // Eğer data.json dosyası varsa oradan yükle
-    loadDataFromJSON().catch(() => {
-        console.log('data.json bulunamadı, varsayılan veriler kullanılıyor');
+    // Global data objesini güncelle
+    Object.keys(newData).forEach(key => {
+        if (data && data[key]) {
+            if (key === 'circle') {
+                data.circle = { ...data.circle, ...newData.circle };
+            } else {
+                data[key].count = newData[key].count;
+                // Metinler değişmiyorsa mevcut metinleri koru
+                if (newData[key].texts) {
+                    data[key].texts = newData[key].texts;
+                }
+            }
+        }
     });
-});
+    
+    // DOM'u güncelle
+    updateDOM();
+}
 
-// Global erişim için window objesine fonksiyonları ekle
-window.updateData = updateData;
-window.reloadData = reloadData;
-window.fetchDataFromAPI = fetchDataFromAPI;
-window.loadDataFromJSON = loadDataFromJSON;
-window.updateManualData = updateManualData;
-window.updateCategory = updateCategory;
-window.updateCount = updateCount;
-window.toggleRotation = toggleRotation;
-window.changeRotationSpeed = changeRotationSpeed;
-window.startAutoUpdate = startAutoUpdate;
-window.stopAutoUpdate = stopAutoUpdate;
-window.disableHoverEffects = disableHoverEffects;
-window.enableHoverEffects = enableHoverEffects;
-window.updateAllCategories = updateAllCategories;
-
-// Veri yapısını dışa aktar
-window.heritageData = data;
-// Sayma animasyonu fonksiyonu
-function animateNumbers() {
+// Gelişmiş sayma animasyonu fonksiyonu
+function animateNumbers(triggerSource = 'manual') {
+    if (isAnimating || !data) return;
+    
+    isAnimating = true;
+    console.log(`Sayma animasyonu başlatıldı (${triggerSource})`);
+    
     // Tüm sayıları animate et
-    Object.keys(data).forEach(key => {
+    Object.keys(data).forEach((key, index) => {
         if (key !== 'circle' && data[key].count) {
             const element = document.getElementById(`${key}-count`);
             if (element) {
+                const finalValue = data[key].count;
+                
                 // Başlangıçta 0 yap
                 element.textContent = '0';
+                
                 // GSAP ile animate et
                 gsap.to(element, {
-                    textContent: data[key].count,
-                    duration: 5,
-                    delay: Math.random() * 0.5, // Random gecikme
+                    textContent: finalValue,
+                    duration: 2.5 + (Math.random() * 1),
+                    delay: index * 0.1,
                     snap: { textContent: 1 },
-                    ease: "power2.out"
+                    ease: "power2.out",
+                    onUpdate: function() {
+                        if (Math.random() > 0.8) {
+                            element.style.color = '#FF6B35';
+                            setTimeout(() => {
+                                element.style.color = '#22201c';
+                            }, 100);
+                        }
+                    },
+                    onComplete: function() {
+                        if (index === Object.keys(data).length - 2) {
+                            isAnimating = false;
+                            console.log('Sayma animasyonu tamamlandı');
+                            
+                            gsap.to('[font-size="40"]', {
+                                scale: 1.05,
+                                duration: 0.3,
+                                ease: "power2.out",
+                                yoyo: true,
+                                repeat: 1
+                            });
+                        }
+                    }
                 });
             }
         }
     });
 }
 
-// DOMContentLoaded event listener'ını güncelle
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Sayfa yüklendi, veriler güncelleniyor...');
-    reloadData();
+// Periyodik animasyon
+function startPeriodicAnimation(intervalMinutes = 3) {
+    if (animationInterval) {
+        clearInterval(animationInterval);
+    }
     
-    // 500ms gecikme ile animasyonu başlat
-    setTimeout(() => {
-        animateNumbers();
-    }, 1000);
+    const intervalMs = intervalMinutes * 60 * 1000;
     
-    loadDataFromJSON().catch(() => {
-        console.log('data.json bulunamadı, varsayılan veriler kullanılıyor');
-    });
+    animationInterval = setInterval(() => {
+        if (!document.hidden && !isAnimating && data) {
+            console.log(`Periyodik animasyon (${intervalMinutes} dakika interval)`);
+            animateNumbers('periodic');
+        }
+    }, intervalMs);
+    
+    console.log(`Periyodik animasyon ${intervalMinutes} dakika arayla başlatıldı`);
+}
+
+function stopPeriodicAnimation() {
+    if (animationInterval) {
+        clearInterval(animationInterval);
+        animationInterval = null;
+        console.log('Periyodik animasyon durduruldu');
+    }
+}
+
+// Real-time veri kontrolü
+function startRealtimeListener() {
+    if (realtimeInterval) {
+        clearInterval(realtimeInterval);
+    }
+    
+    realtimeInterval = setInterval(async () => {
+        if (!document.hidden) {
+            const currentDataString = JSON.stringify(data);
+            const updated = await loadFromSupabase(false);
+            
+            // Veri değişmişse animasyon tetikle
+            if (updated && JSON.stringify(data) !== currentDataString) {
+                console.log('Real-time veri güncellemesi tespit edildi');
+                setTimeout(() => {
+                    animateNumbers('realtime-update');
+                }, 500);
+            }
+        }
+    }, 15000); // 15 saniyede bir kontrol
+    
+    console.log('Real-time listener başlatıldı (15s interval)');
+}
+
+function stopRealtimeListener() {
+    if (realtimeInterval) {
+        clearInterval(realtimeInterval);
+        realtimeInterval = null;
+        console.log('Real-time listener durduruldu');
+    }
+}
+
+// Sayfa görünürlük kontrolü
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        stopPeriodicAnimation();
+        stopRealtimeListener();
+    } else {
+        // Sayfa geri geldiğinde fresh data çek
+        setTimeout(async () => {
+            await loadFromSupabase(true);
+            startPeriodicAnimation(3);
+            startRealtimeListener();
+        }, 1000);
+    }
 });
+
+// Ana başlatma fonksiyonu
+async function initializeApp() {
+    console.log('🚀 Uygulama başlatılıyor...');
+    
+    try {
+        // İlk veri yükleme
+        await loadFromSupabase(false);
+        
+        // İlk animasyonu başlat
+        setTimeout(() => {
+            animateNumbers('initial-load');
+        }, 1000);
+        
+        // Periyodik sistemleri başlat
+        setTimeout(() => {
+            startPeriodicAnimation(3); // 3 dakika
+            startRealtimeListener();   // 15 saniye
+        }, 4000);
+        
+        console.log('✅ Uygulama başarıyla başlatıldı');
+        
+    } catch (error) {
+        console.error('❌ Uygulama başlatma hatası:', error);
+    }
+}
+
+// Sayfa yüklendiğinde başlat
+document.addEventListener('DOMContentLoaded', initializeApp);
+
+// Global erişim için window objesine fonksiyonları ekle
+window.updateData = updateData;
+window.loadFromSupabase = loadFromSupabase;
+window.animateNumbers = animateNumbers;
+window.startPeriodicAnimation = startPeriodicAnimation;
+window.stopPeriodicAnimation = stopPeriodicAnimation;
+window.startRealtimeListener = startRealtimeListener;
+window.stopRealtimeListener = stopRealtimeListener;
+
+// Debug için data objesi
+Object.defineProperty(window, 'heritageData', {
+    get: function() { return data; }
+});
+
+// Debug komutları
+console.log('🎯 Veri Kontrolleri:');
+console.log('- loadFromSupabase() : Supabase\'den veri yükle');
+console.log('- animateNumbers() : Manuel animasyon başlat');
+console.log('- startPeriodicAnimation(dakika) : Periyodik animasyon');
+console.log('- startRealtimeListener() : Real-time dinlemeyi başlat');
+console.log('- heritageData : Mevcut veri objesi');
