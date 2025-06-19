@@ -2,18 +2,33 @@
 const SUPABASE_URL = 'https://nitcvhzbnpvgbzaiesqx.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pdGN2aHpibnB2Z2J6YWllc3F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAzMjg3NzIsImV4cCI6MjA2NTkwNDc3Mn0.3W2DWBuIxHWno1MSsJEwEpK8uAnbKuHIdIJv-K7n-qg';
 
-// Global veri objesi - SADECE Supabase'den gelecek
+// Cache ayarları
+const CACHE_DURATION = 24 * 60 * 60 * 1000;  // 24 saat cache
+const ANIMATION_INTERVAL = 5;                 // 5 dakikada bir animasyon
+const REALTIME_CHECK_INTERVAL = 60;           // 60 dakikada bir veri kontrol
+
+// Global veri objesi ve cache bilgileri
 let data = null;
+let lastDataFetch = null;
+let lastDataHash = null;
 
 // Animasyon durumu takibi
 let isAnimating = false;
 let animationInterval = null;
 let realtimeInterval = null;
 
-// Supabase'den veri yükleme fonksiyonu - TEK KAYNAK
-async function loadFromSupabase(triggerAnimation = true) {
+// Cache kontrollü Supabase veri yükleme fonksiyonu
+async function loadFromSupabase(triggerAnimation = true, forceRefresh = false) {
     try {
-        console.log('Supabase\'den veri yükleniyor...');
+        const now = Date.now();
+        
+        // Cache kontrolü - admin güncellemesi değilse cache kullan
+        if (!forceRefresh && lastDataFetch && (now - lastDataFetch) < CACHE_DURATION) {
+            console.log(`📦 Cache aktif - ${Math.round((CACHE_DURATION - (now - lastDataFetch)) / 1000 / 60)} dakika kaldı`);
+            return data;
+        }
+        
+        console.log('🔄 Supabase\'den fresh veri yükleniyor...');
         
         const response = await fetch(`${SUPABASE_URL}/rest/v1/heritage_data?id=eq.1`, {
             headers: {
@@ -32,8 +47,12 @@ async function loadFromSupabase(triggerAnimation = true) {
         }
         
         const heritageData = dataArray[0];
+        const newDataHash = JSON.stringify(heritageData);
         
-        // Global data objesini Supabase verisiyle güncelle
+        // Veri değişmiş mi kontrol et
+        const dataChanged = lastDataHash !== newDataHash;
+        
+        // Global data objesini güncelle
         data = {
             endustri: {
                 count: heritageData.endustri,
@@ -79,23 +98,29 @@ async function loadFromSupabase(triggerAnimation = true) {
             }
         };
         
+        // Cache bilgilerini güncelle
+        lastDataFetch = now;
+        lastDataHash = newDataHash;
+        
         // DOM'u güncelle
         updateDOM();
         
-        // Animasyonu tetikle
-        if (triggerAnimation && !isAnimating) {
+        // Sadece veri değişmişse animasyon tetikle
+        if (triggerAnimation && !isAnimating && (dataChanged || forceRefresh)) {
             setTimeout(() => {
-                animateNumbers('data-update');
+                animateNumbers(forceRefresh ? 'admin-update' : 'data-update');
             }, 300);
         }
         
         console.log('✅ Veriler Supabase\'den başarıyla yüklendi:', heritageData);
+        if (dataChanged) console.log('🔄 Veri değişikliği tespit edildi');
+        
         return data;
         
     } catch (error) {
         console.error('❌ Supabase load error:', error);
         
-        // Fallback default data - sadece hata durumunda
+        // Fallback default data - sadece hata durumunda ve hiç veri yoksa
         if (!data) {
             data = {
                 endustri: { count: 7, texts: ["Endüstri", "Miras", "Yapısı"] },
@@ -153,9 +178,9 @@ function updateDOM() {
     });
 }
 
-// Admin panelinden güncelleme geldiğinde çağrılacak
+// Admin panelinden güncelleme geldiğinde çağrılacak - ANINDA GÜNCELLEME
 function updateData(newData) {
-    console.log('Admin panelinden güncelleme alındı:', newData);
+    console.log('🔧 Admin panelinden güncelleme alındı:', newData);
     
     // Global data objesini güncelle
     Object.keys(newData).forEach(key => {
@@ -172,8 +197,19 @@ function updateData(newData) {
         }
     });
     
+    // Cache'i sıfırla - admin güncellemesi yapıldı
+    lastDataFetch = Date.now();
+    lastDataHash = JSON.stringify(data);
+    
     // DOM'u güncelle
     updateDOM();
+    
+    // Admin güncellemesi animasyonu
+    if (!isAnimating) {
+        setTimeout(() => {
+            animateNumbers('admin-panel-update');
+        }, 200);
+    }
 }
 
 // Gelişmiş sayma animasyonu fonksiyonu
@@ -181,7 +217,7 @@ function animateNumbers(triggerSource = 'manual') {
     if (isAnimating || !data) return;
     
     isAnimating = true;
-    console.log(`Sayma animasyonu başlatıldı (${triggerSource})`);
+    console.log(`🎬 Sayma animasyonu başlatıldı (${triggerSource})`);
     
     // Tüm sayıları animate et
     Object.keys(data).forEach((key, index) => {
@@ -211,8 +247,9 @@ function animateNumbers(triggerSource = 'manual') {
                     onComplete: function() {
                         if (index === Object.keys(data).length - 2) {
                             isAnimating = false;
-                            console.log('Sayma animasyonu tamamlandı');
+                            console.log('✨ Sayma animasyonu tamamlandı');
                             
+                            // Başarı efekti
                             gsap.to('[font-size="40"]', {
                                 scale: 1.09,
                                 duration: 0.3,
@@ -228,8 +265,8 @@ function animateNumbers(triggerSource = 'manual') {
     });
 }
 
-// Periyodik animasyon
-function startPeriodicAnimation(intervalMinutes = 3) {
+// Sadece görsel animasyon - veri çekmeyen periyodik animasyon
+function startVisualAnimation(intervalMinutes = 5) {
     if (animationInterval) {
         clearInterval(animationInterval);
     }
@@ -238,65 +275,61 @@ function startPeriodicAnimation(intervalMinutes = 3) {
     
     animationInterval = setInterval(() => {
         if (!document.hidden && !isAnimating && data) {
-            console.log(`Periyodik animasyon (${intervalMinutes} dakika interval)`);
-            animateNumbers('periodic');
+            console.log(`🎨 Görsel animasyon (${intervalMinutes} dakika interval)`);
+            animateNumbers('visual-refresh');
         }
     }, intervalMs);
     
-    console.log(`Periyodik animasyon ${intervalMinutes} dakika arayla başlatıldı`);
+    console.log(`🎬 Görsel animasyon ${intervalMinutes} dakika arayla başlatıldı`);
 }
 
-function stopPeriodicAnimation() {
+function stopVisualAnimation() {
     if (animationInterval) {
         clearInterval(animationInterval);
         animationInterval = null;
-        console.log('Periyodik animasyon durduruldu');
+        console.log('⏸️ Görsel animasyon durduruldu');
     }
 }
 
-// Real-time veri kontrolü
-function startRealtimeListener() {
+// Uzun aralıklı veri kontrol - sadece değişiklik varsa animasyon
+function startRealtimeListener(intervalMinutes = 60) {
     if (realtimeInterval) {
         clearInterval(realtimeInterval);
     }
     
+    const intervalMs = intervalMinutes * 60 * 1000;
+    
     realtimeInterval = setInterval(async () => {
         if (!document.hidden) {
-            const currentDataString = JSON.stringify(data);
-            const updated = await loadFromSupabase(false);
-            
-            // Veri değişmişse animasyon tetikle
-            if (updated && JSON.stringify(data) !== currentDataString) {
-                console.log('Real-time veri güncellemesi tespit edildi');
-                setTimeout(() => {
-                    animateNumbers('realtime-update');
-                }, 500);
-            }
+            console.log('🔍 Periyodik veri kontrol başlatıldı...');
+            await loadFromSupabase(true, false); // Cache'i atla ama force refresh değil
         }
-    }, 15000); // 15 saniyede bir kontrol
+    }, intervalMs);
     
-    console.log('Real-time listener başlatıldı (15s interval)');
+    console.log(`🔄 Veri kontrol ${intervalMinutes} dakika arayla başlatıldı`);
 }
 
 function stopRealtimeListener() {
     if (realtimeInterval) {
         clearInterval(realtimeInterval);
         realtimeInterval = null;
-        console.log('Real-time listener durduruldu');
+        console.log('⏸️ Veri kontrol durduruldu');
     }
 }
 
 // Sayfa görünürlük kontrolü
 document.addEventListener('visibilitychange', function() {
     if (document.hidden) {
-        stopPeriodicAnimation();
+        stopVisualAnimation();
         stopRealtimeListener();
+        console.log('😴 Sayfa gizli - tüm işlemler durduruldu');
     } else {
-        // Sayfa geri geldiğinde fresh data çek
+        console.log('👁️ Sayfa tekrar görünür - sistemler yeniden başlatılıyor');
+        // Sayfa geri geldiğinde sadece cache kontrol et
         setTimeout(async () => {
-            await loadFromSupabase(true);
-            startPeriodicAnimation(3);
-            startRealtimeListener();
+            await loadFromSupabase(true, false);
+            startVisualAnimation(ANIMATION_INTERVAL);
+            startRealtimeListener(REALTIME_CHECK_INTERVAL);
         }, 1000);
     }
 });
@@ -306,21 +339,24 @@ async function initializeApp() {
     console.log('🚀 Uygulama başlatılıyor...');
     
     try {
-        // İlk veri yükleme
-        await loadFromSupabase(false);
+        // İlk veri yükleme - fresh data
+        await loadFromSupabase(false, true);
         
         // İlk animasyonu başlat
         setTimeout(() => {
             animateNumbers('initial-load');
         }, 1000);
         
-        // Periyodik sistemleri başlat
+        // Sistemleri başlat
         setTimeout(() => {
-            startPeriodicAnimation(3); // 3 dakika
-            startRealtimeListener();   // 15 saniye
+            startVisualAnimation(ANIMATION_INTERVAL);      // 5 dakika görsel
+            startRealtimeListener(REALTIME_CHECK_INTERVAL); // 60 dakika veri kontrol
         }, 4000);
         
         console.log('✅ Uygulama başarıyla başlatıldı');
+        console.log(`📦 Cache süresi: ${CACHE_DURATION / 1000 / 60 / 60} saat`);
+        console.log(`🎬 Animasyon aralığı: ${ANIMATION_INTERVAL} dakika`);
+        console.log(`🔄 Veri kontrol aralığı: ${REALTIME_CHECK_INTERVAL} dakika`);
         
     } catch (error) {
         console.error('❌ Uygulama başlatma hatası:', error);
@@ -334,10 +370,22 @@ document.addEventListener('DOMContentLoaded', initializeApp);
 window.updateData = updateData;
 window.loadFromSupabase = loadFromSupabase;
 window.animateNumbers = animateNumbers;
-window.startPeriodicAnimation = startPeriodicAnimation;
-window.stopPeriodicAnimation = stopPeriodicAnimation;
+window.startVisualAnimation = startVisualAnimation;
+window.stopVisualAnimation = stopVisualAnimation;
 window.startRealtimeListener = startRealtimeListener;
 window.stopRealtimeListener = stopRealtimeListener;
+
+// Cache bilgilerini gösterme
+window.getCacheInfo = function() {
+    const now = Date.now();
+    const cacheAge = lastDataFetch ? Math.round((now - lastDataFetch) / 1000 / 60) : 0;
+    const cacheRemaining = lastDataFetch ? Math.round((CACHE_DURATION - (now - lastDataFetch)) / 1000 / 60) : 0;
+    
+    console.log('📊 Cache Bilgileri:');
+    console.log(`- Yaş: ${cacheAge} dakika`);
+    console.log(`- Kalan: ${cacheRemaining} dakika`);
+    console.log(`- Son güncelleme: ${lastDataFetch ? new Date(lastDataFetch).toLocaleString() : 'Hiç'}`);
+};
 
 // Debug için data objesi
 Object.defineProperty(window, 'heritageData', {
@@ -345,9 +393,10 @@ Object.defineProperty(window, 'heritageData', {
 });
 
 // Debug komutları
-console.log('🎯 Veri Kontrolleri:');
-console.log('- loadFromSupabase() : Supabase\'den veri yükle');
+console.log('🎯 Optimizasyonlu Veri Kontrolleri:');
+console.log('- loadFromSupabase(anim, force) : Supabase\'den veri yükle');
 console.log('- animateNumbers() : Manuel animasyon başlat');
-console.log('- startPeriodicAnimation(dakika) : Periyodik animasyon');
-console.log('- startRealtimeListener() : Real-time dinlemeyi başlat');
+console.log('- getCacheInfo() : Cache durumunu göster');
+console.log('- startVisualAnimation(dk) : Görsel animasyon başlat');
+console.log('- startRealtimeListener(dk) : Veri kontrol başlat');
 console.log('- heritageData : Mevcut veri objesi');
