@@ -26,11 +26,10 @@
 /* Genel sayfa stilleri */
 body {
     margin: 0;
-    padding: 20px;
     background-color: #FECE07;
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    align-items: center;
     min-height: 100vh;
     font-family: Arial, sans-serif;
     overflow: hidden; /* Scroll kapatıldı */
