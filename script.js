@@ -126,11 +126,11 @@ function updateDOM() {
     // Sayıları güncelle
     Object.keys(data).forEach(key => {
         if (key === 'circle') {
-            // Dairesel metin güncelle
+            // Dairesel metin güncelle - bold sayılarla
             const descElement = document.getElementById('circle-description');
             if (descElement && data.circle) {
                 const { ilce, rota, nokta, description } = data.circle;
-                descElement.textContent = `${ilce} ilçede, ${rota} rotada ve ${nokta} ${description}`;
+                descElement.innerHTML = `<tspan font-weight="bold">${ilce}</tspan> ilçede, <tspan font-weight="bold">${rota}</tspan> rotada ve <tspan font-weight="bold">${nokta}</tspan> ${description}`;
             }
         } else {
             const category = data[key];
