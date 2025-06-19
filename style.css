@@ -30,7 +30,7 @@ body {
     background-color: #FECE07;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     min-height: 100vh;
     font-family: Arial, sans-serif;
     overflow: hidden; /* Scroll kapatıldı */

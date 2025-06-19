@@ -1,51 +1,8 @@
 // Admin panel trigger - ana HTML'e eklenecek
-
-// Gizli admin butonu oluştur
-function createAdminButton() {
-    const adminBtn = document.createElement('button');
-    adminBtn.innerHTML = '⚙️';
-    adminBtn.id = 'admin-trigger';
-    adminBtn.style.cssText = `
-        position: fixed;
-        top: 10px;
-        right: 10px;
-        width: 40px;
-        height: 40px;
-        border: none;
-        border-radius: 50%;
-        background: rgba(0,0,0,0.1);
-        color: #333;
-        font-size: 18px;
-        cursor: pointer;
-        z-index: 9999;
-        opacity: 0;
-        transition: all 0.3s ease;
-        backdrop-filter: blur(10px);
-    `;
-    
-    // Admin butonu için hover efekti
-    adminBtn.addEventListener('mouseenter', function() {
-        this.style.background = 'rgba(254, 206, 7, 0.8)';
-        this.style.transform = 'scale(1.1)';
-    });
-    
-    adminBtn.addEventListener('mouseleave', function() {
-        this.style.background = 'rgba(0,0,0,0.1)';
-        this.style.transform = 'scale(1)';
-    });
-    
-    // Admin panelini aç
-    adminBtn.addEventListener('click', function() {
-        window.open('admin.html', 'adminPanel', 'width=900,height=700,scrollbars=yes,resizable=yes');
-    });
-    
-    document.body.appendChild(adminBtn);
-    return adminBtn;
-}
+// Basitleştirilmiş versiyon - direkt panel açılır
 
 // Gizli admin aktivasyonu - İBB Miras logosuna 5 kez tıklama
 let clickCount = 0;
-let adminBtn = null;
 let clickTimeout = null;
 
 // Sayfa yüklendikten sonra logo elementini bul ve event listener ekle
@@ -89,24 +46,17 @@ function initializeLogoClick() {
             }, 200);
             
             if (clickCount >= 5) {
-                if (!adminBtn) {
-                    adminBtn = createAdminButton();
-                    setTimeout(() => {
-                        adminBtn.style.opacity = '1';
-                    }, 100);
-                    console.log('🎉 Admin modu aktif! Sağ üst köşede ⚙️ butonu görünüyor.');
-                    
-                    // Admin panelini direkt açalım
-                    setTimeout(() => {
-                        window.open('admin.html', 'adminPanel', 'width=900,height=700,scrollbars=yes,resizable=yes');
-                    }, 500);
-                    
-                    // Başarı efekti
-                    logo.style.filter = 'drop-shadow(0 0 20px #27ae60)';
-                    setTimeout(() => {
-                        logo.style.filter = '';
-                    }, 1000);
-                }
+                // Admin panelini direkt aç
+                console.log('🎉 Admin paneli açılıyor...');
+                window.open('admin.html', 'adminPanel', 'width=900,height=700,scrollbars=yes,resizable=yes');
+                
+                // Başarı efekti
+                logo.style.filter = 'drop-shadow(0 0 20px #27ae60)';
+                setTimeout(() => {
+                    logo.style.filter = '';
+                }, 1000);
+                
+                // Sayacı sıfırla
                 clickCount = 0;
                 
                 if (clickTimeout) {
@@ -140,11 +90,7 @@ function initializeLogoClick() {
 document.addEventListener('keydown', function(e) {
     if (e.ctrlKey && e.shiftKey && e.key === 'A') {
         e.preventDefault();
-        if (!adminBtn) {
-            adminBtn = createAdminButton();
-            adminBtn.style.opacity = '1';
-        }
-        adminBtn.click(); // Admin panelini direkt aç
+        window.open('admin.html', 'adminPanel', 'width=900,height=700,scrollbars=yes,resizable=yes');
         console.log('Admin paneli klavye kısayolu ile açıldı');
     }
 });
@@ -153,10 +99,7 @@ document.addEventListener('keydown', function(e) {
 window.addEventListener('load', function() {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('admin') === 'true') {
-        if (!adminBtn) {
-            adminBtn = createAdminButton();
-            adminBtn.style.opacity = '1';
-        }
+        window.open('admin.html', 'adminPanel', 'width=900,height=700,scrollbars=yes,resizable=yes');
         console.log('Admin paneli URL parametresi ile açıldı');
     }
     
@@ -166,11 +109,7 @@ window.addEventListener('load', function() {
 
 // Console'dan admin paneli açma
 window.openAdmin = function() {
-    if (!adminBtn) {
-        adminBtn = createAdminButton();
-        adminBtn.style.opacity = '1';
-    }
-    adminBtn.click();
+    window.open('admin.html', 'adminPanel', 'width=900,height=700,scrollbars=yes,resizable=yes');
     console.log('Admin paneli console komutu ile açıldı');
 };
 
