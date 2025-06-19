@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İBB Miras - Admin Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #FECE07, #f39c12);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .admin-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #FECE07;
+        }
+
+        .form-group h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #34495e;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #FECE07;
+            box-shadow: 0 0 0 3px rgba(254, 206, 7, 0.1);
+        }
+
+        .current-value {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .btn-primary {
+            background: #FECE07;
+            color: #2c3e50;
+        }
+
+        .btn-primary:hover {
+            background: #f39c12;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+
+        .status.success {
+            background: #d5f4e6;
+            color: #27ae60;
+            border: 1px solid #27ae60;
+        }
+
+        .status.error {
+            background: #fdeaea;
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+        }
+
+        .circle-section {
+            grid-column: 1 / -1;
+        }
+
+        .circle-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .auth-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .auth-input {
+            width: 300px;
+            max-width: 100%;
+            margin: 10px auto;
+            display: block;
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+            background: #FECE07;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        @media (max-width: 768px) {
+            .admin-container {
+                margin: 10px;
+                padding: 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Authentication Section -->
+        <div class="auth-section" id="authSection">
+            <h2>Admin Girişi</h2>
+            <input type="password" id="adminPassword" class="form-group input auth-input" placeholder="Admin şifresi">
+            <button onclick="authenticate()" class="btn btn-primary">Giriş Yap</button>
+        </div>
+
+        <!-- Admin Panel (Hidden by default) -->
+        <div id="adminPanel" style="display: none;">
+            <div class="header">
+                <h1>🏛️ İBB Miras Veri Yönetimi</h1>
+                <p>İstanbul'un kültür varlıklarının sayılarını güncelleyin</p>
+            </div>
+
+            <form id="heritageForm">
+                <div class="form-grid">
+                    <!-- Endüstri Miras Yapısı -->
+                    <div class="form-group">
+                        <h3><span class="icon"></span> Endüstri Miras Yapısı</h3>
+                        <label for="endustri">Sayı:</label>
+                        <input type="number" id="endustri" name="endustri" min="0">
+                        <div class="current-value">Mevcut: <span id="current-endustri">-</span></div>
+                    </div>
+
+                    <!-- Anıt Eser -->
+                    <div class="form-group">
+                        <h3><span class="icon"></span> Anıt Eser</h3>
+                        <label for="anit">Sayı:</label>
+                        <input type="number" id="anit" name="anit" min="0">
+                        <div class="current-value">Mevcut: <span id="current-anit">-</span></div>
+                    </div>
+
+                    <!-- Tarihi Türbe -->
+                    <div class="form-group">
+                        <h3><span class="icon"></span> Tarihi Türbe</h3>
+                        <label for="turbe">Sayı:</label>
+                        <input type="number" id="turbe" name="turbe" min="0">
+                        <div class="current-value">Mevcut: <span id="current-turbe">-</span></div>
+                    </div>
+
+                    <!-- Müze ve Sergi Mekanı -->
+                    <div class="form-group">
+                        <h3><span class="icon"></span> Müze ve Sergi Mekanı</h3>
+                        <label for="muze">Sayı:</label>
+                        <input type="number" id="muze" name="muze" min="0">
+                        <div class="current-value">Mevcut: <span id="current-muze">-</span></div>
+                    </div>
+
+                    <!-- Kamusal Sanat Eseri -->
+                    <div class="form-group">
+                        <h3><span class="icon"></span> Kamusal Sanat Eseri</h3>
+                        <label for="kamusal">Sayı:</label>
+                        <input type="number" id="kamusal" name="kamusal" min="0">
+                        <div class="current-value">Mevcut: <span id="current-kamusal">-</span></div>
+                    </div>
+
+                    <!-- Arkeopark -->
+                    <div class="form-group">
+                        <h3><span class="icon"></span> Arkeopark</h3>
+                        <label for="arkeopark">Sayı:</label>
+                        <input type="number" id="arkeopark" name="arkeopark" min="0">
+                        <div class="current-value">Mevcut: <span id="current-arkeopark">-</span></div>
+                    </div>
+
+                    <!-- Tarihi Hazire ve Mezar -->
+                    <div class="form-group">
+                        <h3><span class="icon"></span> Tarihi Hazire ve Mezar</h3>
+                        <label for="hazire">Sayı:</label>
+                        <input type="number" id="hazire" name="hazire" min="0">
+                        <div class="current-value">Mevcut: <span id="current-hazire">-</span></div>
+                    </div>
+
+                    <!-- Sarnıç ve Maksem -->
+                    <div class="form-group">
+                        <h3><span class="icon"></span> Sarnıç ve Maksem</h3>
+                        <label for="sarnic">Sayı:</label>
+                        <input type="number" id="sarnic" name="sarnic" min="0">
+                        <div class="current-value">Mevcut: <span id="current-sarnic">-</span></div>
+                    </div>
+
+                    <!-- Tarihi Çeşme -->
+                    <div class="form-group">
+                        <h3><span class="icon"></span> Tarihi Çeşme</h3>
+                        <label for="cesme">Sayı:</label>
+                        <input type="number" id="cesme" name="cesme" min="0">
+                        <div class="current-value">Mevcut: <span id="current-cesme">-</span></div>
+                    </div>
+
+                    <!-- Dairesel Metin Bilgileri -->
+                    <div class="form-group circle-section">
+                        <h3><span class="icon"></span> Dairesel Metin Bilgileri</h3>
+                        <div class="circle-inputs">
+                            <div>
+                                <label for="ilce">İlçe Sayısı:</label>
+                                <input type="number" id="ilce" name="ilce" min="0">
+                                <div class="current-value">Mevcut: <span id="current-ilce">-</span></div>
+                            </div>
+                            <div>
+                                <label for="rota">Rota Sayısı:</label>
+                                <input type="number" id="rota" name="rota" min="0">
+                                <div class="current-value">Mevcut: <span id="current-rota">-</span></div>
+                            </div>
+                            <div>
+                                <label for="nokta">Nokta Sayısı:</label>
+                                <input type="number" id="nokta" name="nokta" min="0">
+                                <div class="current-value">Mevcut: <span id="current-nokta">-</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="buttons">
+                    <button type="submit" class="btn btn-primary">💾 Kaydet ve Güncelle</button>
+                    <button type="button" onclick="resetForm()" class="btn btn-secondary">↺ Sıfırla</button>
+                    <button type="button" onclick="loadCurrentData()" class="btn btn-secondary">📥 Supabase'den Yükle</button>
+                    <button type="button" onclick="previewChanges()" class="btn btn-secondary">👁️ Önizleme</button>
+                </div>
+            </form>
+
+            <div id="status" class="status"></div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://nitcvhzbnpvgbzaiesqx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pdGN2aHpibnB2Z2J6YWllc3F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAzMjg3NzIsImV4cCI6MjA2NTkwNDc3Mn0.3W2DWBuIxHWno1MSsJEwEpK8uAnbKuHIdIJv-K7n-qg';
+      
+        // Simple authentication
+        const ADMIN_PASSWORD = 'ibb2024';
+        
+        // Global Supabase data - TEK KAYNAK
+        let currentData = null;
+        
+        function authenticate() {
+            const password = document.getElementById('adminPassword').value;
+            if (password === ADMIN_PASSWORD) {
+                document.getElementById('authSection').style.display = 'none';
+                document.getElementById('adminPanel').style.display = 'block';
+                loadCurrentData(); // Supabase'den yükle
+            } else {
+                alert('Yanlış şifre!');
+            }
+        }
+
+        // Supabase'den mevcut verileri yükle - TEK KAYNAK
+        async function loadCurrentData() {
+            try {
+                showStatus('Veriler yükleniyor...', 'success');
+                
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/heritage_data?id=eq.1`, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const dataArray = await response.json();
+                if (dataArray.length === 0) {
+                    throw new Error('Supabase\'de veri bulunamadı');
+                }
+
+                const heritageData = dataArray[0];
+                currentData = heritageData;
+
+                // Form inputlarını doldur
+                Object.keys(currentData).forEach(key => {
+                    if (key !== 'id' && key !== 'created_at' && key !== 'updated_at') {
+                        const input = document.getElementById(key);
+                        const currentSpan = document.getElementById(`current-${key}`);
+                        
+                        if (input && currentSpan) {
+                            input.value = currentData[key];
+                            currentSpan.textContent = currentData[key];
+                        }
+                    }
+                });
+
+                showStatus('✅ Veriler Supabase\'den başarıyla yüklendi!', 'success');
+                console.log('Supabase\'den yüklenen veriler:', heritageData);
+
+            } catch (error) {
+                console.error('Supabase load error:', error);
+                showStatus('❌ Veri yükleme hatası: ' + error.message, 'error');
+                
+                // Fallback: Formu temizle
+                resetFormInputs();
+            }
+        }
+
+        // Form inputlarını temizle
+        function resetFormInputs() {
+            const inputs = document.querySelectorAll('input[type="number"]');
+            const spans = document.querySelectorAll('.current-value span');
+            
+            inputs.forEach(input => input.value = '');
+            spans.forEach(span => span.textContent = '-');
+        }
+
+        // Form sıfırlama
+        function resetForm() {
+            if (currentData) {
+                loadCurrentData(); // Supabase'den tekrar yükle
+            } else {
+                resetFormInputs();
+            }
+        }
+
+        // Değişiklikleri önizle
+        function previewChanges() {
+            if (!currentData) {
+                alert('Önce veriler yüklenmelidir.');
+                return;
+            }
+
+            const formData = new FormData(document.getElementById('heritageForm'));
+            const changes = {};
+            let hasChanges = false;
+
+            for (let [key, value] of formData.entries()) {
+                const newValue = parseInt(value);
+                const oldValue = currentData[key];
+                
+                if (newValue !== oldValue) {
+                    changes[key] = {
+                        old: oldValue,
+                        new: newValue,
+                        change: newValue - oldValue
+                    };
+                    hasChanges = true;
+                }
+            }
+
+            if (hasChanges) {
+                let message = 'Yapılacak değişiklikler:\n\n';
+                Object.keys(changes).forEach(key => {
+                    const change = changes[key];
+                    const direction = change.change > 0 ? '↗️' : '↘️';
+                    message += `${key}: ${change.old} → ${change.new} (${direction} ${Math.abs(change.change)})\n`;
+                });
+                alert(message);
+            } else {
+                alert('Herhangi bir değişiklik yapılmamış.');
+            }
+        }
+
+        // Status mesajı göster
+        function showStatus(message, type = 'success') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            statusDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Supabase'e kaydet
+        async function saveToSupabase(data) {
+            try {
+                // Updated_at otomatik ekle
+                data.updated_at = new Date().toISOString();
+                
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/heritage_data?id=eq.1`, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Supabase error: ${response.status} - ${errorText}`);
+                }
+
+                return true;
+            } catch (error) {
+                console.error('Supabase save error:', error);
+                throw error;
+            }
+        }
+
+        // Ana sayfayı güncelle
+        async function updateMainPage(data) {
+            try {
+                // Ana sayfadaki verileri güncelle
+                if (window.opener && window.opener.updateData) {
+                    window.opener.updateData({
+                        endustri: { count: data.endustri, texts: ["Endüstri", "Miras", "Yapısı"] },
+                        anit: { count: data.anit, texts: ["Anıt", "Eser"] },
+                        turbe: { count: data.turbe, texts: ["Tarihi", "Türbe"] },
+                        muze: { count: data.muze, texts: ["Müze ve", "Sergi Mekanı"] },
+                        kamusal: { count: data.kamusal, texts: ["Kamusal", "Sanat Eseri"] },
+                        arkeopark: { count: data.arkeopark, texts: ["Arkeopark"] },
+                        hazire: { count: data.hazire, texts: ["Tarihi", "Hazire ve", "Mezar"] },
+                        sarnic: { count: data.sarnic, texts: ["Sarnıç ve", "Maksem"] },
+                        cesme: { count: data.cesme, texts: ["Tarihi", "Çeşme"] },
+                        circle: { 
+                            ilce: data.ilce, 
+                            rota: data.rota, 
+                            nokta: data.nokta, 
+                            description: "ayrı noktalarda İstanbul'un kültür varlıklarında rutin koruma çalışmaları yapıyoruz." 
+                        }
+                    });
+                    
+                    // Ana sayfada animasyonu tetikle
+                    if (window.opener.animateNumbers) {
+                        setTimeout(() => {
+                            window.opener.animateNumbers('admin-update');
+                        }, 500);
+                    }
+
+                    console.log('Ana sayfa başarıyla güncellendi');
+                } else {
+                    console.log('Ana sayfa bulunamadı veya updateData fonksiyonu mevcut değil');
+                }
+            } catch (error) {
+                console.error('Ana sayfa güncelleme hatası:', error);
+            }
+        }
+
+        // Form submit handler
+        document.getElementById('heritageForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!currentData) {
+                showStatus('❌ Önce veriler yüklenmelidir!', 'error');
+                return;
+            }
+            
+            const formData = new FormData(this);
+            const data = {};
+            
+            // Form verilerini al
+            for (let [key, value] of formData.entries()) {
+                data[key] = parseInt(value);
+            }
+
+            try {
+                showStatus('Kaydediliyor...', 'success');
+                
+                // Supabase'e kaydet
+                await saveToSupabase(data);
+                
+                // Başarılı ise currentData'yı güncelle
+                currentData = { ...currentData, ...data };
+                
+                // Ana sayfayı güncelle
+                await updateMainPage(data);
+                
+                // Current value span'larını güncelle
+                Object.keys(data).forEach(key => {
+                    const currentSpan = document.getElementById(`current-${key}`);
+                    if (currentSpan) {
+                        currentSpan.textContent = data[key];
+                    }
+                });
+                
+                showStatus('✅ Veriler başarıyla kaydedildi ve ana sayfa güncellendi!', 'success');
+                console.log('Güncellenen veriler:', data);
+                
+            } catch (error) {
+                console.error('Save error:', error);
+                showStatus('❌ Kaydetme sırasında hata oluştu: ' + error.message, 'error');
+            }
+        });
+
+        // Sayfa yüklendiğinde
+        window.addEventListener('load', function() {
+            console.log('Admin panel yüklendi');
+        });
+
+        // Debug fonksiyonları
+        window.loadCurrentData = loadCurrentData;
+        window.saveToSupabase = saveToSupabase;
+        window.getCurrentData = () => currentData;
+        
+        console.log('🔧 Admin Panel Debug Komutları:');
+        console.log('- loadCurrentData() : Supabase\'den veri yükle');
+        console.log('- getCurrentData() : Mevcut veriyi görüntüle');
+    </script>
+</body>
+</html>
