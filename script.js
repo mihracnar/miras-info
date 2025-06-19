@@ -214,7 +214,7 @@ function animateNumbers(triggerSource = 'manual') {
                             console.log('Sayma animasyonu tamamlandı');
                             
                             gsap.to('[font-size="40"]', {
-                                scale: 1.05,
+                                scale: 1.09,
                                 duration: 0.3,
                                 ease: "power2.out",
                                 yoyo: true,
