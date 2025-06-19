@@ -33,6 +33,7 @@ body {
     align-items: center;
     min-height: 100vh;
     font-family: Arial, sans-serif;
+    overflow: hidden; /* Scroll kapatıldı */
 }
 
 /* SVG container */
