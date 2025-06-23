@@ -116,14 +116,11 @@ text:nth-child(3) { transition-delay: 0.04s; } /* 0.1s'den azaltıldı */
 text:nth-child(4) { transition-delay: 0.06s; } /* 0.15s'den azaltıldı */
 
 /* Responsive design */
-@media (max-width: 650px) {
-    body {
-        padding: 10px;
-    }
-    
+@media (max-width: 650px) {    
     svg {
         transform: scale(0.9);
         transform-origin: center;
+        padding-bottom: 30vw;
     }
     
     /* Mobilde daha da az hover efekti */
@@ -134,8 +131,13 @@ text:nth-child(4) { transition-delay: 0.06s; } /* 0.15s'den azaltıldı */
 }
 
 @media (max-width: 520px) {
+    body {
+        padding-bottom: 400px;
+    }
+    
     svg {
         transform: scale(0.95);
+        padding-bottom: 30vw;
     }
     
     /* Küçük ekranlarda minimal hover */
